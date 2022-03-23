@@ -2,6 +2,7 @@
 #include <Time.h>
 #include <LiquidCrystal.h>
 
+#define ACT 3 // Actuatör pini
 
 /*##################################MUSİC###############################################*/
 
@@ -177,7 +178,7 @@ bool tarihAyarlandi=false;
 unsigned long previousMillis = 0;
 const long interval = 1000;
 void setup() {
-  
+  pinMode (ACT, OUTPUT);
   lcd.begin (16,2);
   lcd.setCursor(0,0);
   Serial.begin(9600);
@@ -286,7 +287,10 @@ void loop() {
     }
 
     if(RTC_DS1302.hours==h && m==RTC_DS1302.minutes && alarm){// Alarm aktif ise ses çal
+      digitalWrite(ACT, HIGH);
       ses(); 
+    }else{
+      digitalWrite(ACT, LOW);
     }
     
     
@@ -301,9 +305,7 @@ void loop() {
     if(y==1){
       lcd.print("ALARM KUR");
       
-      h=RTC_DS1302.hours;
-      m=RTC_DS1302.minutes;
-      m--;
+      
     }else if(y==2){
       lcd.print("SAAT AYARI");
       saatAyarlandi=false;
@@ -316,6 +318,7 @@ void loop() {
       gun=RTC_DS1302.dayofmonth;
       ay=RTC_DS1302.month;
       yil=RTC_DS1302.year;
+      tarihAyarSayaci=0;
       
     }else{
       
@@ -324,7 +327,7 @@ void loop() {
     }
     
     delay(200);
-  }else if(x>98 && x<250 && set){ //UP TUSU
+  }else if(x>98 && x<150 && set){ //UP TUSU
 
       if(y==1){// EĞER UP TUŞU TIKLANDIĞINDA ALARM AYAR MODUNDAYSA
         if(saat){
@@ -429,7 +432,7 @@ void loop() {
       }
       
       delay(200);
-    }else if(x>0 && x<250 && set){// RIGHT TUSU
+    }else if(x>0 && x<80 && set){// RIGHT TUSU
       saat=false;
       dakika=true;
       if(y==3 && tarihAyarSayaci!=2){
@@ -439,7 +442,7 @@ void loop() {
     }else if(x>420 && x<600 && !set){ // ANA EKRAN ALARM KAPAT
       alarm=false;
       delay(200);
-    }else if(x>0 && x<250 && !set){// ANA EKRAN ALARM AÇ
+    }else if(x>0 && x<80 && !set){// ANA EKRAN ALARM AÇ
       alarm=true;
       delay(200);
     }
@@ -537,7 +540,7 @@ void loop() {
         previousMillis = currentMillis;
     
         if(isaret){
-          if (h < 10){
+          if (Sh < 10){
               lcd.print("0");
               lcd.print(Sh);
             }
