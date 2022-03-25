@@ -1,10 +1,21 @@
-#include <virtuabotixRTC.h>
-#include <Time.h>
-#include <LiquidCrystal.h>
+/*
+PROJE: ALARM ÖZELLİKLİ DİJİTAL SAAT
+İSİM SOYİSİM: ÖZCAN YÜREKLİOĞLU
+FAKÜLTE NO: 180757098
+DERS: MEKATRONİK
 
-#define ACT 3 // Actuatör pini
+ 
+ */
 
-/*##################################MUSİC###############################################*/
+
+
+#include <virtuabotixRTC.h>//RTC MODULU DAHİL ETME
+#include <Time.h>// TİME MODULU DAHİL ETME
+#include <LiquidCrystal.h>// LCD SHIELD DAHİL ETME
+
+#define ACT 3 // ACTUATUÖR PİNİ
+
+/*##################################BUZZER İÇİN MUSİC NOTALARI###############################################*/
 
 #define NOTE_B0  31
 #define NOTE_C1  33
@@ -139,12 +150,12 @@ int wholenote = (60000 * 4) / tempo;
 
 int divider = 0, noteDuration = 0;
 
-/*##################################MUSİC###############################################*/
+/*##################################BUZZER İÇİN MUSİC NOTALARI SONU###############################################*/
 
-virtuabotixRTC RTC_DS1302(12, 11, 13);
-LiquidCrystal lcd(8,9,4,5,6,7);
+virtuabotixRTC RTC_DS1302(12, 11, 13);//RTC MODUL
+LiquidCrystal lcd(8,9,4,5,6,7);//LCD MODUL
 
-byte Bell[8] = {
+byte Bell[8] = {//ALARM KARAKTERİ
   B00000,
   B00100,
   B01110,
@@ -155,44 +166,64 @@ byte Bell[8] = {
   B00100
 };
 
-int sensorValue = 0;
-int sensorPin = A0; 
 
-int h=0;  
-int m=0;
-int Sh=0;
-int Sm=0;
-int x;
-int y=0;
-int gun;
-int ay;
-int yil;
-int tarihAyarSayaci=0;
-bool set=false;
-bool isaret=true;
-bool alarm=false;
-bool saat=true;
-bool dakika=false;
-bool saatAyarlandi=false;
-bool tarihAyarlandi=false;
-unsigned long previousMillis = 0;
-const long interval = 1000;
+
+int h=0;//ALARM KURMAK İÇİN SAAT DEĞİŞKENİ
+
+int m=0;//ALARM KURMAK İÇİN DAKİKA DEĞİŞKENİ
+
+int Sh=0;//SAAT AYARLAMAK İÇİN SAAT DEĞİŞKENİ
+
+int Sm=0;//SAAT AYARLAMAK İÇİN DAKİKA DEĞİŞKENİ
+
+int x;//TUŞLARDAN ALINAN ANALOG GİRİŞ/ÇIKIŞ DEĞİŞKENİ
+
+int y=0;//MENU SAYACI EĞER 0 İSE ANA EKRANDA DEMEKTİR. 1 İSE ALARM KUR MODUNDADIR...
+
+int gun;//TARİH AYARLAMAK İÇİN GÜN DEĞİŞKENİ
+
+int ay;//TARİH AYARLAMAK İÇİN AY DEĞİŞKENİ
+
+int yil;//TARİH AYARLAMAK İÇİN YIL DEĞİŞKENİ
+
+int tarihAyarSayaci=0;//TARIH AYAR MODUNDA GUN-AY-YIL DEĞİŞTİRMEK İÇİN SAYAÇ(0 İSE GUN DEĞİŞİCEK 1 İSE AY 2 İSE YIL)
+
+bool set=false;//AYAR MODUNDAYSA (GENELDE EKRANI TEMİZLEMEK İÇİN VS)
+
+bool isaret=true;//BU DEĞİŞKEN SAAT DAKİKA AY GİBİ DEĞERLERİN DEĞİŞME SIRASINDA YANIP SÖNMESİ İÇİN KULLANILIR
+
+bool alarm=false;//ALARM ETKİN-DEĞİL İÇİN KULLANILIYOR
+
+bool saat=true;//SAAT VE ALARM AYARLAMA ESNASINDA, SAAT KISMININ AKTİF OLMASI
+
+bool dakika=false;//SAAT VE ALARM AYARLAMA ESNASINDA, DAKİKA KISMININ AKTİF OLMASI
+
+bool saatAyarlandi=false;//EĞER SAAT AYARLANDIYSA SAAT GÜNCELLEMEK İÇİN KULLANILIR
+
+bool tarihAyarlandi=false;//EĞER TARİH AYARLANDIYSA TARİHİ GÜNCELLEMEK İÇİN KULANILIR
+
+unsigned long previousMillis = 0;//BEKLEME FONKS. İÇİN DEĞİŞKEN
+const long interval = 1000;//1000 MS BEKLEME DEĞİŞKENİ
+
+
 void setup() {
-  pinMode (ACT, OUTPUT);
-  lcd.begin (16,2);
-  lcd.setCursor(0,0);
-  Serial.begin(9600);
-  lcd.createChar(0,Bell);
+  pinMode (ACT, OUTPUT);//AKTUAÖTR PİNİ AKTİF ETME
+  lcd.begin (16,2);//LCD BAŞLATMA
+  lcd.setCursor(0,0);//LCD KONUM AYARLAMA
+  Serial.begin(9600);//GELİŞTİRİCİ İÇİN SERİAL AYARI
+  lcd.createChar(0,Bell);//ALARM KARAKTERİNİ OLUŞTURMA
 
 
   
 }
 
+
+
 void loop() {
-  RTC_DS1302.updateTime();
-  x = analogRead (0);
+  RTC_DS1302.updateTime();//RTC Yİ GÜNCELLE
+  x = analogRead (0);//TUŞLARIN BAĞLI OLDUĞU ANALOG0 GİRİŞ/ÇIKIŞI BİLGİSİ AL
   //Serial.println(x);
-  if(x>1000 && y==0){// Herhangi bir tuşa basılmaz ise Tarih ve saati göster
+  if(x>1000 && y==0){// HERHANGİ BİR TUA BASILI DEĞİL VE AYAR MODU 0 İSE ANA EKRANI GÖSTER
     
     lcd.setCursor(0,0);
     lcd.print(RTC_DS1302.dayofmonth);
@@ -202,7 +233,7 @@ void loop() {
     lcd.print(RTC_DS1302.year);
     lcd.setCursor(0,11);
     lcd.setCursor(11,0);
-    if (RTC_DS1302.hours < 10)
+    if (RTC_DS1302.hours < 10)//BURADA SAAT FORMATI DÜZENLENİYOR (3:15 DEĞİLDE 03:15 GİBİ GÖZÜKÜCEK)
     {
       lcd.print("0");
       lcd.print(RTC_DS1302.hours);
@@ -232,7 +263,7 @@ void loop() {
       }
     }
     lcd.setCursor(14,0);
-    if (RTC_DS1302.minutes < 10)
+    if (RTC_DS1302.minutes < 10)//BURADA SAAT FORMATI DÜZENLENİYOR (13:5 DEĞİLDE 13:05 GİBİ GÖZÜKÜCEK)
     {
       lcd.print("0");
       lcd.print(RTC_DS1302.minutes);
@@ -256,7 +287,7 @@ void loop() {
       
     }
     
-    if(alarm){//Alarm kuruluysa LCD de göster
+    if(alarm){//ALARM KURULU İSE ANA EKRANDA GÖSTER
       lcd.setCursor(11,1);
       
       if (h < 10){
@@ -280,47 +311,47 @@ void loop() {
       }
       
       
-    }else{//Alarm gösterge sonu
+    }else{//ALARM KURULU DEĞİLSE BOŞ GÖSTER
     lcd.setCursor(11,1);
     lcd.print("     ");
     
     }
 
-    if(RTC_DS1302.hours==h && m==RTC_DS1302.minutes && alarm){// Alarm aktif ise ses çal
-      digitalWrite(ACT, HIGH);
-      ses(); 
+    // ALARM KISMI
+    // ALARM 1 DAKİKA BOYUNCA AKTİF OLUCAK
+    if(RTC_DS1302.hours==h && m==RTC_DS1302.minutes && alarm){// ALARM İSTENİLEN SAAT VE DAKİKAYA GELDİ İSE AKTUATÖR PİNİ HIGH OLUCAK VE BUZZERDAN SES ÇIKICAK
+      digitalWrite(ACT, HIGH);//ACT(AKTUATÖR PİNİ AKTİF)
+      ses(); //BUZZER İSTENİLDİĞİ TAKDİRDE BURDAKİ KOD SATIRI SİLİNEREK İPTAL EDİLEBİLİR.
     }else{
-      digitalWrite(ACT, LOW);
+      digitalWrite(ACT, LOW);//ACT(AKTUATÖR PİNİ PASİF)
     }
     
     
     
-  }// Her hangi bir tuş basılı değil ise sonu
-  else if(x>600 && x<1000){ //SELECT TUŞU
+  }//ANA EKRAN KISMI SONU
+  else if(x>600 && x<1000){ //SELECT TUŞU BASILIRSA
     set=true;
     saat=true;
     dakika=false;
-    y++;
+    y++; // SELECT TUŞUNA HER TIKLANDIĞINDA Y BİR ARTTIR(YANİ DİĞER AYARA GEÇ ALARM KUR->SAAT AYARLA)
     lcd.clear();
     if(y==1){
-      lcd.print("ALARM KUR");
-      
-      
+      lcd.print("ALARM KUR");  
     }else if(y==2){
       lcd.print("SAAT AYARI");
-      saatAyarlandi=false;
-      
-      Sh=RTC_DS1302.hours;
-      Sm=RTC_DS1302.minutes;
+      saatAyarlandi=false;//SAAT AYARINDA İLK OLARAK saatAyarlandi DEĞİŞKENİ FALSE OLUYOR.
+      Sh=RTC_DS1302.hours;//O ANKİ SAAT BİLGİSİNİ AL
+      Sm=RTC_DS1302.minutes;//O ANKİ DAKİKA BİLGİSİNİ AL
     }else if(y==3){
       lcd.print("TARIH AYARI");
-      tarihAyarlandi=false;
+      tarihAyarlandi=false;//TARİH AYARINDA İLK OLARAK tarih Ayarlandi DEĞİŞKENİ FALSE OLUYOR
+      //O ANKİ GÜN AY VE YIL BİLGİLERİNİ AL
       gun=RTC_DS1302.dayofmonth;
       ay=RTC_DS1302.month;
       yil=RTC_DS1302.year;
       tarihAyarSayaci=0;
       
-    }else{
+    }else{//3 ADET AYAR KISMI OLDUĞU İÇİN BİR YERDEN SONRA ANA EKRANA GEÇ BUNUN İÇİN y DEĞİŞKENİNİN 0 OLMASI GEREKİR.
       
       y=0;
       set=false;
@@ -329,7 +360,7 @@ void loop() {
     delay(200);
   }else if(x>98 && x<150 && set){ //UP TUSU
 
-      if(y==1){// EĞER UP TUŞU TIKLANDIĞINDA ALARM AYAR MODUNDAYSA
+      if(y==1){// EĞER UP TUŞU TIKLANDIĞINDA ALARM AYAR MODUNDAYSA SAAT YADA DAKİKAYI 1 ARTTIR
         if(saat){
         
         h++;
@@ -340,7 +371,7 @@ void loop() {
           m++;
           if(m>60){m=0;}
         }
-      }else if(y==2){// EĞER UP TUŞU TIKLANDIĞINDA SAAT AYAR MODUNDAYSA
+      }else if(y==2){// EĞER UP TUŞU TIKLANDIĞINDA SAAT AYAR MODUNDAYSA SAAT YADA DAKİKAYI 1 ARTTIR
         saatAyarlandi=true;
         
         if(saat){
@@ -353,7 +384,7 @@ void loop() {
           Sm++;
           if(Sm>60){Sm=0;}
         }
-      }else if(y==3){ // EĞER UP TUŞU TIKLANDIĞINDA TARIH AYAR MODUNDAYSA
+      }else if(y==3){ // EĞER UP TUŞU TIKLANDIĞINDA TARIH AYAR MODUNDAYSA GÜN, AY YADA YIL 1 ARTTIR
         tarihAyarlandi=true;
         if(tarihAyarSayaci==0){
           
@@ -377,7 +408,7 @@ void loop() {
       
     }else if(x>250 && x<400 && set){ // DOWN TUSU
     
-      if(y==1){// EĞER DOWN TUŞU TIKLANDIĞINDA ALARM AYAR MODUNDAYSA
+      if(y==1){// EĞER DOWN TUŞU TIKLANDIĞINDA ALARM AYAR MODUNDAYSA SAAT YADA DAKİKAYI 1 AZALT
         if(saat){
           h--;
           if(h<0){
@@ -389,7 +420,7 @@ void loop() {
           if(m<0){m=60;}
         
         }
-      }else if(y==2){// EĞER DOWN TUŞU TIKLANDIĞINDA SAAT AYAR MODUNDAYSA
+      }else if(y==2){// EĞER DOWN TUŞU TIKLANDIĞINDA SAAT AYAR MODUNDAYSA SAAT YADA DAKİKAYI 1 AZALT
         saatAyarlandi=true;
         
         if(saat){
@@ -403,7 +434,7 @@ void loop() {
           if(Sm<0){Sm=60;}
         
         }
-      }else if(y==3){ // EĞER DOWN TUŞU TIKLANDIĞINDA TARIH AYAR MODUNDAYSA
+      }else if(y==3){ // EĞER DOWN TUŞU TIKLANDIĞINDA TARIH AYAR MODUNDAYSA GUN , AY YADA YILI 1 AZALT
         tarihAyarlandi=true;
         if(tarihAyarSayaci==0){
           if(gun>1){
@@ -427,7 +458,7 @@ void loop() {
       saat=true;
       dakika=false;
 
-      if(y==3 && tarihAyarSayaci!=0){
+      if(y==3 && tarihAyarSayaci!=0){//TARİH AYARI MODUNDAYSA EĞER SOLA TIKLANDIĞINDA GUN,AY YADA YIL GÖSTERGESİ DEĞİŞTİR
         tarihAyarSayaci--;
       }
       
@@ -435,7 +466,7 @@ void loop() {
     }else if(x>0 && x<80 && set){// RIGHT TUSU
       saat=false;
       dakika=true;
-      if(y==3 && tarihAyarSayaci!=2){
+      if(y==3 && tarihAyarSayaci!=2){//TARİH AYARI MODUNDAYSA EĞER SAĞA TIKLANDIĞINDA GUN,AY YADA YIL GÖSTERGESİ DEĞİŞTİR
         tarihAyarSayaci++;
       }
       delay(200);
@@ -706,13 +737,13 @@ void loop() {
 
       Serial.print("Saat ayari yapildi");
       RTC_DS1302.setDS1302Time(00, Sm, Sh, 6, RTC_DS1302.dayofmonth, RTC_DS1302.month, RTC_DS1302.year);
-      saatAyarlandi=false;
+      saatAyarlandi=false;// HER LOOP DÖNGÜSÜNDE BURAYA GİRMEMESİ İÇİN saatAyarlandi DEĞİŞKENİ FALSE OLUYOR
       
     }
     if(tarihAyarlandi){// TARIH AYARI YAPILDIYSA
       Serial.print("Tarih ayari yapildi");
       RTC_DS1302.setDS1302Time(00, RTC_DS1302.minutes, RTC_DS1302.hours, 6, gun, ay, yil);
-      tarihAyarlandi=false;
+      tarihAyarlandi=false;// HER LOOP DÖNGÜSÜNDE BURAYA GİRMEMESİ İÇİN tarihAyarlandi DEĞİŞKENİ FALSE OLUYOR
     }
 
     
